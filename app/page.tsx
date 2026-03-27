@@ -1,8 +1,11 @@
+import ImageTabs from "@/components/image-tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Briefcase } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <main className="flex-1">
@@ -25,9 +28,40 @@ export default function Home() {
 
 
         {/* Hero Images Section with Tabs */}
-        <section className="bg-gray-50 py-20">
+        <ImageTabs />
 
+        {/* Features Sections */}
+        <section className="border-t bg-white py-24 px-24">
+          <div className="container max-auto px-4">
+            <div className="grid gap-12 md:grid-cols-3">
+            <div className="flex flex-col">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center">
+                <Briefcase className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-3 text-2xl font-semibold text-black">Organize Applications</h3>
+              <p>Create custom boards and columns to track your job application at every stage of the process</p>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center">
+                <Briefcase className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-3 text-2xl font-semibold text-black">Organize Applications</h3>
+              <p>Create custom boards and columns to track your job application at every stage of the process</p>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center">
+                <Briefcase className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-3 text-2xl font-semibold text-black">Organize Applications</h3>
+              <p>Create custom boards and columns to track your job application at every stage of the process</p>
+            </div>
+
+            </div>
+          </div>
         </section>
+
       </main>
     </div>
   );
