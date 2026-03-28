@@ -15,7 +15,7 @@ interface JobApplicationData {
     jobUrl?: string,
     columnId: string,
     boardId: string,
-    tags: string[],
+    tags: string[], 
     description: string,
 }
 
@@ -58,8 +58,8 @@ export async function createJobApplication(data: JobApplicationData) {
         return { error: "Board not found" }
     }
     // Verify board ownership
-    const column = await Column.find({
-        _id: boardId,
+    const column = await Column.findOne({
+        _id: columnId,
         userId: session.user.id
     })
 
@@ -152,11 +152,11 @@ export async function updateJobApplication(id: string, updates: {
             $pull: {jobApplications: id}
         })
 
-        const jobsInTargetColumn = await jobApplication.find({
+        const jobsInTargetColumn = await JobApplication.find({
             columnId: newColumnId,
-            _id: {$ne: id}
+            _id: { $ne: id }
         }).sort({order: 1}).lean()
-
+        
 
         let newOrderValue : number;
 
@@ -166,7 +166,7 @@ export async function updateJobApplication(id: string, updates: {
             const jobsThatNeedToShift = jobsInTargetColumn.slice(order);
 
             for (const job of jobsThatNeedToShift){
-                await jobApplication.findByIdAndUpdate(job._id, {
+                await JobApplication.findByIdAndUpdate(job._id, {
                     $set: {order: job.order + 100}
                 })
             }
@@ -188,7 +188,7 @@ export async function updateJobApplication(id: string, updates: {
         })
 
     } else if(order !== undefined && order !== null){
-        const otherJobsInColumn = await jobApplication.find({
+        const otherJobsInColumn = await JobApplication.find({
             columnId: currentColumnId,
             _id: { $ne: id }
         }).sort({ order: 1 }).lean()
@@ -206,7 +206,7 @@ export async function updateJobApplication(id: string, updates: {
            const jobsToShiftDown = otherJobsInColumn.slice(order, oldPositionIndex);
            
            for(const job of jobsToShiftDown){
-               await jobApplication.findByIdAndUpdate(job._id, {
+               await JobApplication.findByIdAndUpdate(job._id, {
                    $set: { order: job.order + 100 }
                })           
             }
@@ -215,7 +215,7 @@ export async function updateJobApplication(id: string, updates: {
 
             for (const job of jobsToShiftDUp) {
                 const newOrder = Math.max(0, job.order - 100);
-                await jobApplication.findByIdAndUpdate(job._id, {
+                await JobApplication.findByIdAndUpdate(job._id, {
                     $set: { order: newOrder}
                 })
             }
@@ -224,9 +224,39 @@ export async function updateJobApplication(id: string, updates: {
         updatesToApply.order = newOrderValue;
     }
 
-    const updated = await jobApplication.findByIdAndUpdate(id, updatesToApply, {
+    const updated = await JobApplication.findByIdAndUpdate(id, updatesToApply, {
         new: true,
     })
 
+    revalidatePath("/dashboard")
+
     return {data: JSON.parse(JSON.stringify(updated))}
+}
+
+
+export async function deleteJobApplication(id: string) {
+    const session = await getSession();
+
+    if (!session?.user) {
+        return { error: "Unauthorized" };
+    }
+
+    const jobApplication = await JobApplication.findById(id);
+
+    if (!jobApplication) {
+        return { error: "Job application not found" };
+    }
+
+    if (jobApplication.userId !== session.user.id) {
+        return { error: "Unauthorized" };
+    }
+
+    await Column.findByIdAndUpdate(jobApplication.columnId, {
+        $pull: { jobApplications: id },
+    });
+
+    await JobApplication.deleteOne({ _id: id });
+    revalidatePath("/dashboard");
+
+    return { success: true };
 }
